@@ -68,6 +68,17 @@ check_all_ports() {
     echo "✅ すべてのポートは使用可能です。構築を続行します。"
 }
 
+# --- docker compose コマンドのチェック ---
+if ! command -v docker &> /dev/null; then
+    echo "❌ Docker がインストールされていません。Docker Desktop または Docker Engine をインストールしてください。"
+    exit 1
+fi
+if ! docker compose version &> /dev/null; then
+    echo "❌ 'docker compose' コマンドが使用できません。"
+    echo "Docker のバージョンが古い場合は、'docker-compose' ではなく新しい 'docker compose' が使えるようアップデートしてください。"
+    exit 1
+fi
+echo "✅ docker compose コマンドが使用可能です。"
 
 # --- ポート設定の取得 ---
 echo "--- 🔌 ポート設定 ---"
