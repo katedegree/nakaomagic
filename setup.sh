@@ -262,7 +262,9 @@ EOL
 echo "mysql_data" >> back/.gitignore
 
 # back/app/Models/User.php の編集 (Sanctum/HasApiTokensの追加)
-sed -i '' -e '/use Illuminate\\Notifications\\Notifiable;/a\use Laravel\\Sanctum\\HasApiTokens;' back/app/Models/User.php
+sed -i '' -e $'/use Illuminate\\\\Notifications\\\\Notifiable;/a\\
+use Laravel\\\\Sanctum\\\\HasApiTokens;
+' back/app/Models/User.php
 sed -i '' -e 's/use HasFactory, Notifiable;/use HasFactory, Notifiable, HasApiTokens;/' back/app/Models/User.php
 
 # --- 5. 最終環境構築と起動 ---
