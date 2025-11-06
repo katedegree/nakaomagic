@@ -267,7 +267,7 @@ sed -i '' -e 's/use HasFactory, Notifiable;/use HasFactory, Notifiable, HasApiTo
 
 # --- 5. 最終環境構築と起動 ---
 
-echo "✅ 5. 最終コンテナビルド (docker compose build)"
+echo "✅ 5. コンテナビルド (docker compose build)"
 docker compose build
 
 echo "✅ 5.1. コンテナ起動 (docker compose up -d)"
@@ -299,6 +299,12 @@ done
 if [ "$MIGRATION_SUCCESS" != "true" ]; then
     echo "❌ 警告: データベースマイグレーションが複数回失敗しました。DBコンテナの状態と.env設定を確認してください。"
 fi
+
+echo "✅ 6. 最終コンテナ再ビルド (docker compose build)"
+docker compose build
+
+echo "✅ 6.1. 最終コンテナ際起動 (docker compose up -d)"
+docker compose up -d
 
 echo "🎉 環境構築が完了しました！"
 echo "Next.js (front) は http://localhost:${FRONT_PORT} で、Laravel (api) は http://localhost:${API_PORT} で動作しています。"
