@@ -278,7 +278,7 @@ echo "✅ 5.1. コンテナ起動 (docker compose up -d)"
 docker compose up -d
 
 # 環境が完全に立ち上がるまで待機時間を延長
-echo "⌛ データベース起動を待機中 (20秒)..."
+echo "⌛ データベース起動を待機中 (10秒)..."
 sleep 10
 
 echo "✅ 5.2. Laravel APIルートのインストール"
