@@ -244,12 +244,8 @@ echo "⚙️ back/.env ファイルのデータベース設定を更新中..."
 # ★★★ 修正点: DB設定を安全に削除してから追加 ★★★
 # DB_CONNECTION=sqlite の行を見つけ、その行から6行分を削除（古いDB設定全体を削除）
 # macOS (BSD sed) 向け
-sed -i '' -e '/^DB_CONNECTION=sqlite/,+5d' back/.env
+cat > /tmp/new_env << 'EOL'
 
-# 新しいDB設定行をファイル末尾に挿入
-cat << EOL >> back/.env
-
-# Docker Compose Environment
 DB_CONNECTION=mysql
 DB_HOST=db
 DB_PORT=3306
@@ -257,6 +253,12 @@ DB_DATABASE=dev
 DB_USERNAME=root
 DB_PASSWORD=password
 EOL
+
+# 既存のDB設定ブロックを削除（sqlite/mysql問わず）
+sed -i '' -e '/^DB_CONNECTION=/,+6d' back/.env
+
+# LOG_LEVEL=debug の後に1行空けてDB設定を挿入
+sed -i '' -e '/^LOG_LEVEL=debug$/r /tmp/new_env' back/.env
 
 # back/.gitignore に mysql_data を追記
 echo "mysql_data" >> back/.gitignore
