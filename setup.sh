@@ -277,7 +277,7 @@ docker compose up -d
 
 # 環境が完全に立ち上がるまで待機時間を延長
 echo "⌛ データベース起動を待機中 (20秒)..."
-sleep 20 # 10秒から20秒に延長
+sleep 10
 
 echo "✅ 5.2. Laravel APIルートのインストール"
 docker compose run api sh -c "yes | php artisan install:api"
