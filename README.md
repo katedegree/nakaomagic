@@ -70,7 +70,7 @@ docker compose build
 front
 
 ```bash
- docker compose run app npx -y create-next-app front --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
+docker compose run app npx -y create-next-app front --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
 ```
 
 back
