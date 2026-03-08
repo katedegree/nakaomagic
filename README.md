@@ -19,16 +19,16 @@
 .
 ├── compose.yml # 作成
 ├── Dockerfile.api # 作成
-└── Dockerfile.app # 作成
+└── Dockerfile.web # 作成
 ```
 
 compose.yml
 
 ```yaml
 services:
-  app:
+  web:
     build: 
-      dockerfile: Dockerfile.app
+      dockerfile: Dockerfile.web
     volumes:
       - .:/workdir
   api:
@@ -67,10 +67,10 @@ WORKDIR /workdir
 docker compose build
 ```
 
-front
+web
 
 ```bash
-docker compose --rm run app npx -y create-next-app front --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
+docker compose --rm run web npx -y create-next-app web --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
 ```
 
 back
@@ -91,11 +91,11 @@ docker compose down
 .
 ├── api
 │   └── Dockerfile # 作成
-├── front
+├── web
 │   └── Dockerfile # 作成
 ├── compose.yml
 ├── Dockerfile.api # 削除
-└── Dockerfile.app # 削除
+└── Dockerfile.web # 削除
 ```
 
 api/Dockerfile
@@ -131,11 +131,11 @@ EXPOSE 8000
 
 ```
 
-front/Dockerfile
+web/Dockerfile
 
 ```bash
 FROM node:24-slim
-WORKDIR /front
+WORKDIR /web
 # パッケージのインストールとキャッシュ削除
 RUN apt-get update && \
     apt-get install -y rsync && \
@@ -149,9 +149,9 @@ COPY . .
 # node_modules同期用スクリプト作成
 RUN printf '#!/bin/bash\n\
 set -e\n\
-[ ! -d /front/node_modules ] || [ -z "$(ls -A /front/node_modules 2>/dev/null)" ] && \
-cp -r /opt/node_modules /front/node_modules || \
-rsync -au --quiet /opt/node_modules/ /front/node_modules/\n\
+[ ! -d /web/node_modules ] || [ -z "$(ls -A /web/node_modules 2>/dev/null)" ] && \
+cp -r /opt/node_modules /web/node_modules || \
+rsync -au --quiet /opt/node_modules/ /web/node_modules/\n\
 exec "$@"\n' > /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
@@ -170,7 +170,7 @@ EXPOSE 3000
 │   │       └── User.php # 編集
 │   ├── .env # 編集
 │   └── .gitignore # 編集
-├── front
+├── web
 └── compose.yml # 編集
 ```
 
@@ -178,10 +178,10 @@ compose.yml
 
 ```yaml
 services:
-  app:
-    build: ./front
+  web:
+    build: ./web
     volumes:
-      - ./front:/front
+      - ./web:/web
     ports:
       - 3000:3000
   api:
