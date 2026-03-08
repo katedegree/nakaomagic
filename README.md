@@ -281,7 +281,7 @@ docker compose build
 ```
 
 ```bash
-docker compose run --rm api sh -c "yes | php artisan install:api"
+docker compose run --rm api sh -c "no | php artisan install:api"
 ```
 
 ```bash
