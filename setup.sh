@@ -82,7 +82,7 @@ echo "✅ docker compose コマンドが使用可能です。"
 
 # --- ポート設定の取得 ---
 echo "--- 🔌 ポート設定 ---"
-FRONT_PORT=$(get_valid_port "Next.js (front)" "3000")
+FRONT_PORT=$(get_valid_port "Next.js (web)" "3000")
 API_PORT=$(get_valid_port "Laravel (api)" "8000")
 DB_PORT=$(get_valid_port "MySQL (db)" "3306")
 echo "-------------------"
@@ -92,14 +92,14 @@ check_all_ports
 
 # --- 1. 初期ファイル作成 ---
 
-echo "✅ 1. 初期ファイルの作成 (.docker-compose.yml, Dockerfile.api, Dockerfile.app)"
+echo "✅ 1. 初期ファイルの作成 (compose.yaml, Dockerfile.api, Dockerfile.web)"
 
-# docker-compose.yml の作成 (ここではまだportsは含めない)
-cat << EOF > docker-compose.yml
+# compose.yml の作成 (ここではまだportsは含めない)
+cat << EOF > compose.yaml
 services:
-  app:
+  web:
     build: 
-      dockerfile: Dockerfile.app
+      dockerfile: Dockerfile.web
     volumes:
       - .:/workdir
   api:
@@ -110,9 +110,9 @@ services:
 
 EOF
 
-# Dockerfile.api, Dockerfile.app の作成 (変更なし)
+# Dockerfile.api, Dockerfile.web の作成 (変更なし)
 cat << EOF > Dockerfile.api
-FROM php:8.4
+FROM php:8.4-fpm
 WORKDIR /workdir
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -121,8 +121,8 @@ RUN apt-get install -y zip
 
 EOF
 
-cat << EOF > Dockerfile.app
-FROM node:24
+cat << EOF > Dockerfile.web
+FROM node:24-slim
 WORKDIR /workdir
 
 EOF
@@ -132,57 +132,54 @@ EOF
 echo "✅ 2. コンテナ作成 (docker compose build)"
 docker compose build
 
-echo "✅ 2.1. Next.jsプロジェクト 'front' の作成"
-docker compose run app npx -y create-next-app front --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
+echo "✅ 2.1. Next.jsプロジェクト 'web' の作成"
+docker compose run --rm web npx -y create-next-app web --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
 
-echo "✅ 2.2. Laravelプロジェクト 'back' の作成"
-docker compose run api composer create-project laravel/laravel back
-
-echo "✅ 2.3. 一時コンテナの削除 (docker compose down)"
-docker compose down
+echo "✅ 2.2. Laravelプロジェクト 'api' の作成"
+docker compose run --rm api composer create-project laravel/laravel api
 
 # --- 3. Dockerfileの移動・作成と初期ファイルの削除 ---
 
 echo "✅ 3. Dockerfileの移動・作成と初期ファイルの削除"
 
 # 初期Dockerfileの削除
-rm Dockerfile.api Dockerfile.app
+rm Dockerfile.api Dockerfile.web
 
-# back/Dockerfile の作成 (変更なし)
-cat << 'EOF' > back/Dockerfile
-FROM php:8.4
-WORKDIR /back
+# api/Dockerfile の作成 (変更なし)
+cat << 'EOF' > api/Dockerfile
+FROM dunglas/frankenphp:php8.4
+WORKDIR /api
 # composerをインストール
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
 # パッケージのインストールとキャッシュ削除
 RUN apt-get update && \
-    apt-get install -y zip unzip git rsync && \
-    rm -rf /var/lib/apt/lists/* && \
-    docker-php-ext-install pdo_mysql
+  apt-get install -y zip unzip git rsync && \
+  rm -rf /var/lib/apt/lists/* && \
+  install-php-extensions pdo_mysql pcntl
 # 依存関係ファイルのみコピーしてキャッシュを効かせる
 COPY composer.json composer.lock ./
 RUN composer install --no-scripts
-# マウント外にコピー
+# マウント外にコピー
 RUN mv vendor /opt/vendor
 COPY . .
 # vendor同期用スクリプト作成
 RUN printf '#!/bin/bash\n\
 set -e\n\
-[ ! -d /back/vendor ] || [ -z "$(ls -A /back/vendor 2>/dev/null)" ] && \
-cp -r /opt/vendor /back/vendor || \
-rsync -au --quiet /opt/vendor/ /back/vendor/\n\
+[ ! -d /api/vendor ] || [ -z "$(ls -A /api/vendor 2>/dev/null)" ] && \
+cp -r /opt/vendor /api/vendor || \
+rsync -au --quiet /opt/vendor/ /api/vendor/\n\
 exec "$@"\n' > /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["php", "artisan", "serve", "--host", "0.0.0.0"]
+CMD ["php", "artisan", "octane:start", "--host", "0.0.0.0", "--port", "8000", "--watch"]
 EXPOSE 8000
 EOF
 
-# front/Dockerfile の作成 (変更なし)
-cat << 'EOF' > front/Dockerfile
-FROM node:24
-WORKDIR /front
+# web/Dockerfile の作成 (変更なし)
+cat << 'EOF' > web/Dockerfile
+FROM node:24-slim
+WORKDIR /web
 # パッケージのインストールとキャッシュ削除
 RUN apt-get update && \
     apt-get install -y rsync && \
@@ -190,15 +187,15 @@ RUN apt-get update && \
 # 依存関係ファイルのみコピーしてキャッシュを効かせる
 COPY package.json package-lock.json ./
 RUN npm install
-# マウント外にコピー
+# マウント外にコピー
 RUN mv node_modules /opt/node_modules
 COPY . .
 # node_modules同期用スクリプト作成
 RUN printf '#!/bin/bash\n\
 set -e\n\
-[ ! -d /front/node_modules ] || [ -z "$(ls -A /front/node_modules 2>/dev/null)" ] && \
-cp -r /opt/node_modules /front/node_modules || \
-rsync -au --quiet /opt/node_modules/ /front/node_modules/\n\
+[ ! -d /web/node_modules ] || [ -z "$(ls -A /web/node_modules 2>/dev/null)" ] && \
+cp -r /opt/node_modules /web/node_modules || \
+rsync -au --quiet /opt/node_modules/ /web/node_modules/\n\
 exec "$@"\n' > /docker-entrypoint.sh && \
     chmod +x /docker-entrypoint.sh
 ENTRYPOINT ["/docker-entrypoint.sh"]
@@ -206,31 +203,29 @@ CMD ["npm", "run", "dev"]
 EXPOSE 3000
 EOF
 
-# --- 4. ファイル編集 (docker-compose.yml, .env, .gitignore, User.php) ---
+# --- 4. ファイル編集 (compose.yaml, .env, .gitignore, User.php) ---
 
-echo "✅ 4. ファイル編集 (docker-compose.yml, .env, .gitignore, User.php)"
+echo "✅ 4. ファイル編集 (compose.yaml, .env, .gitignore, User.php)"
 
-# docker-compose.yml の更新 (ポート適用と依存関係追加)
-cat << EOF > docker-compose.yml
+# compose.yaml の更新 (ポート適用と依存関係追加)
+cat << EOF > compose.yaml
 services:
-  app:
-    build: ./front
+  web:
+    build: ./web
     volumes:
-      - ./front:/front
+      - ./web:/web
     ports:
       - ${FRONT_PORT}:3000
   api:
-    build: ./back
+    build: ./api
     volumes:
-      - ./back:/back
+      - ./api:/api
     ports:
       - ${API_PORT}:8000
-    depends_on:
-      - db
   db:
     image: mysql:8.4
     volumes:
-      - ./back/mysql_data:/var/lib/mysql
+      - ./api/mysql_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: dev
@@ -239,8 +234,8 @@ services:
 
 EOF
 
-# back/.env のデータベース箇所を編集
-echo "⚙️ back/.env ファイルのデータベース設定を更新中..."
+# api/.env のデータベース箇所を編集
+echo "⚙️ api/.env ファイルのデータベース設定を更新中..."
 # ★★★ 修正点: DB設定を安全に削除してから追加 ★★★
 # DB_CONNECTION=sqlite の行を見つけ、その行から6行分を削除（古いDB設定全体を削除）
 # macOS (BSD sed) 向け
@@ -255,34 +250,37 @@ DB_PASSWORD=password
 EOL
 
 # 既存のDB設定ブロックを削除（sqlite/mysql問わず）
-sed -i '' -e '/^DB_CONNECTION=/,+6d' back/.env
+sed -i '' -e '/^DB_CONNECTION=/,+6d' api/.env
 
 # LOG_LEVEL=debug の後に1行空けてDB設定を挿入
-sed -i '' -e '/^LOG_LEVEL=debug$/r /tmp/new_env' back/.env
+sed -i '' -e '/^LOG_LEVEL=debug$/r /tmp/new_env' api/.env
 
-# back/.gitignore に mysql_data を追記
-echo "mysql_data" >> back/.gitignore
+# api/.gitignore に mysql_data を追記
+echo "mysql_data" >> api/.gitignore
 
-# back/app/Models/User.php の編集 (Sanctum/HasApiTokensの追加)
+# api/app/Models/User.php の編集 (Sanctum/HasApiTokensの追加)
 sed -i '' -e $'/use Illuminate\\\\Notifications\\\\Notifiable;/a\\
 use Laravel\\\\Sanctum\\\\HasApiTokens;
-' back/app/Models/User.php
-sed -i '' -e 's/use HasFactory, Notifiable;/use HasFactory, Notifiable, HasApiTokens;/' back/app/Models/User.php
+' api/app/Models/User.php
+sed -i '' -e 's/use HasFactory, Notifiable;/use HasFactory, Notifiable, HasApiTokens;/' api/app/Models/User.php
 
 # --- 5. 最終環境構築と起動 ---
 
 echo "✅ 5. コンテナビルド (docker compose build)"
 docker compose build
 
-echo "✅ 5.1. コンテナ起動 (docker compose up -d)"
-docker compose up -d
-
 # 環境が完全に立ち上がるまで待機時間を延長
 echo "⌛ データベース起動を待機中 (10秒)..."
 sleep 10
 
-echo "✅ 5.2. Laravel APIルートのインストール"
-docker compose run api sh -c "yes | php artisan install:api"
+echo "✅ 5.1. Laravel APIルートのインストール"
+docker compose run --rm api sh -c "no | php artisan install:api"
+
+echo "5.2. Octaneのインストール"
+docker compose run --rm api sh -c "composer require laravel/octane && php artisan octane:install --server=frankenphp"
+
+echo "5.4. コンテナの起動"
+docker compose up -d
 
 echo "✅ 5.3. データベースマイグレーションの実行"
 
@@ -290,8 +288,8 @@ echo "✅ 5.3. データベースマイグレーションの実行"
 MIGRATION_SUCCESS=false
 for i in 1 2 3; do
     echo "Attempting migration (Attempt $i/3)..."
-    # run api php artisan migrate の実行結果をチェック
-    if docker compose run api php artisan migrate; then
+    # exec api php artisan migrate の実行結果をチェック
+    if docker compose exec api php artisan migrate; then
         echo "✅ データベースマイグレーションに成功しました。"
         MIGRATION_SUCCESS=true
         break
@@ -304,14 +302,8 @@ if [ "$MIGRATION_SUCCESS" != "true" ]; then
     echo "❌ 警告: データベースマイグレーションが複数回失敗しました。DBコンテナの状態と.env設定を確認してください。"
 fi
 
-echo "✅ 6. 最終コンテナ再ビルド (docker compose build)"
-docker compose build
-
-echo "✅ 6.1. 最終コンテナ際起動 (docker compose up -d)"
-docker compose up -d
-
 echo "🎉 環境構築が完了しました！"
-echo "Next.js (front) は http://localhost:${FRONT_PORT} で、Laravel (api) は http://localhost:${API_PORT} で動作しています。"
+echo "Next.js (web) は http://localhost:${FRONT_PORT} で、Laravel (api) は http://localhost:${API_PORT} で動作しています。"
 echo "MySQL (db) はホストポート ${DB_PORT} で接続可能です。"
 
 rm -rf nakaomagic

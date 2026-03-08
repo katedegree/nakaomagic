@@ -17,12 +17,12 @@
 
 ```bash
 .
-├── compose.yml # 作成
+├── compose.yaml # 作成
 ├── Dockerfile.api # 作成
 └── Dockerfile.web # 作成
 ```
 
-compose.yml
+compose.yaml
 
 ```yaml
 services:
@@ -87,7 +87,7 @@ docker compose run --rm api composer create-project laravel/laravel api
 │   └── Dockerfile # 作成
 ├── web
 │   └── Dockerfile # 作成
-├── compose.yml
+├── compose.yaml
 ├── Dockerfile.api # 削除
 └── Dockerfile.web # 削除
 ```
@@ -165,10 +165,10 @@ EXPOSE 3000
 │   ├── .env # 編集
 │   └── .gitignore # 編集
 ├── web
-└── compose.yml # 編集
+└── compose.yaml # 編集
 ```
 
-compose.yml
+compose.yaml
 
 ```yaml
 services:
