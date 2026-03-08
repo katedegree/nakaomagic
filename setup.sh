@@ -269,10 +269,6 @@ sed -i '' -e 's/use HasFactory, Notifiable;/use HasFactory, Notifiable, HasApiTo
 echo "✅ 5. コンテナビルド (docker compose build)"
 docker compose build
 
-# 環境が完全に立ち上がるまで待機時間を延長
-echo "⌛ データベース起動を待機中 (10秒)..."
-sleep 10
-
 echo "✅ 5.1. Laravel APIルートのインストール"
 docker compose run --rm api php artisan install:api --without-migration-prompt
 
@@ -281,6 +277,10 @@ docker compose run --rm api sh -c "composer require laravel/octane && php artisa
 
 echo "5.4. コンテナの起動"
 docker compose up -d
+
+# 環境が完全に立ち上がるまで待機時間を延長
+echo "⌛ データベース起動を待機中 (15秒)..."
+sleep 15
 
 echo "✅ 5.3. データベースマイグレーションの実行"
 
