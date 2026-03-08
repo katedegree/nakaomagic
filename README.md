@@ -70,13 +70,13 @@ docker compose build
 web
 
 ```bash
-docker compose --rm run web npx -y create-next-app web --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
+docker compose run --rm web npx -y create-next-app web --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
 ```
 
 back
 
 ```bash
-docker compose --rm run api composer create-project laravel/laravel api
+docker compose run --rm api composer create-project laravel/laravel api
 ```
 
 コンテナ削除
