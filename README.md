@@ -17,12 +17,12 @@
 
 ```bash
 .
-├── docker-compose.yml # 作成
+├── compose.yml # 作成
 ├── Dockerfile.api # 作成
 └── Dockerfile.app # 作成
 ```
 
-docker-compose.yml
+compose.yml
 
 ```yaml
 services:
@@ -93,7 +93,7 @@ docker compose down
 │   └── Dockerfile # 作成
 ├── front
 │   └── Dockerfile # 作成
-├── docker-compose.yml
+├── compose.yml
 ├── Dockerfile.api # 削除
 └── Dockerfile.app # 削除
 ```
@@ -171,10 +171,10 @@ EXPOSE 3000
 │   ├── .env # 編集
 │   └── .gitignore # 編集
 ├── front
-└── docker-compose.yml # 編集
+└── compose.yml # 編集
 ```
 
-docker-compose.yml
+compose.yml
 
 ```yaml
 services:
