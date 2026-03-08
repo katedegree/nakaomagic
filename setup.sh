@@ -303,7 +303,8 @@ if [ "$MIGRATION_SUCCESS" != "true" ]; then
 fi
 
 echo "🎉 環境構築が完了しました！"
-echo "Next.js (web) は http://localhost:${FRONT_PORT} で、Laravel (api) は http://localhost:${API_PORT} で動作しています。"
+echo "Next.js (web) は http://localhost:${FRONT_PORT}で動作しています。"
+echo "Laravel (api) は http://localhost:${API_PORT} で動作しています。"
 echo "MySQL (db) はホストポート ${DB_PORT} で接続可能です。"
 
 rm -rf nakaomagic
