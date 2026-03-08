@@ -274,7 +274,7 @@ echo "⌛ データベース起動を待機中 (10秒)..."
 sleep 10
 
 echo "✅ 5.1. Laravel APIルートのインストール"
-docker compose run --rm api sh -c "no | php artisan install:api"
+docker compose run --rm api php artisan install:api --without-migration-prompt
 
 echo "5.2. Octaneのインストール"
 docker compose run --rm api sh -c "composer require laravel/octane && php artisan octane:install --server=frankenphp"
