@@ -73,7 +73,7 @@ web
 docker compose run --rm web npx -y create-next-app web --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
 ```
 
-back
+api
 
 ```bash
 docker compose run --rm api composer create-project laravel/laravel api
