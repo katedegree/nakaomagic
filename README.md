@@ -70,13 +70,13 @@ docker compose build
 front
 
 ```bash
-docker compose run app npx -y create-next-app front --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
+docker compose --rm run app npx -y create-next-app front --typescript --no-eslint --no-react-compiler --tailwind --src-dir --app --turbopack --no-import-alias
 ```
 
 back
 
 ```bash
-docker compose run api composer create-project laravel/laravel back
+docker compose --rm run api composer create-project laravel/laravel back
 ```
 
 コンテナ削除
@@ -280,18 +280,18 @@ back/.gitignore（行末に追記）
 + mysql_data
 ```
 
-### APIルートの作成
+### APIルートの作成とOctane のインストール
 
 ```bash
 docker compose build
 ```
 
 ```bash
-docker compose up -d
+docker compose run --rm api sh -c "yes | php artisan install:api"
 ```
 
 ```bash
-docker compose run api sh -c "yes | php artisan install:api"
+docker compose run --rm api sh -c "composer require laravel/octane && php artisan octane:install --server=frankenphp"
 ```
 
 ### 環境構築（git cloneした人も含む）
@@ -307,5 +307,5 @@ docker compose up -d
 ```
 
 ```bash
-docker compose run api php artisan migrate
+docker compose exec api php artisan migrate
 ```
