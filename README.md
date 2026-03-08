@@ -76,7 +76,7 @@ docker compose --rm run app npx -y create-next-app front --typescript --no-eslin
 back
 
 ```bash
-docker compose --rm run api composer create-project laravel/laravel back
+docker compose --rm run api composer create-project laravel/laravel api
 ```
 
 コンテナ削除
@@ -89,7 +89,7 @@ docker compose down
 
 ```bash
 .
-├── back
+├── api
 │   └── Dockerfile # 作成
 ├── front
 │   └── Dockerfile # 作成
@@ -98,7 +98,7 @@ docker compose down
 └── Dockerfile.app # 削除
 ```
 
-back/Dockerfile
+api/Dockerfile
 
 ```bash
 FROM dunglas/frankenphp:php8.4
@@ -164,7 +164,7 @@ EXPOSE 3000
 
 ```bash
 .
-├── back
+├── api
 │   ├── app
 │   │   └── Models
 │   │       └── User.php # 編集
@@ -185,15 +185,15 @@ services:
     ports:
       - 3000:3000
   api:
-    build: ./back
+    build: ./api
     volumes:
-      - ./back:/back
+      - ./api:/api
     ports:
       - 8000:8000
   db:
     image: mysql:8.4
     volumes:
-      - ./back/mysql_data:/var/lib/mysql
+      - ./api/mysql_data:/var/lib/mysql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: dev
@@ -202,7 +202,7 @@ services:
 
 ```
 
-back/app/Models/User.php
+api/app/Models/User.php
 
 ```php
 <?php
@@ -257,7 +257,7 @@ class User extends Authenticatable
 
 ```
 
-back/.env（データベース箇所を編集）
+api/.env（データベース箇所を編集）
 
 ```diff
 - DB_CONNECTION=sqlite
@@ -274,7 +274,7 @@ back/.env（データベース箇所を編集）
 + DB_PASSWORD=password # パスワード
 ```
 
-back/.gitignore（行末に追記）
+api/.gitignore（行末に追記）
 
 ```diff
 + mysql_data
