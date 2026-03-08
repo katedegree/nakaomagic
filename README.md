@@ -79,12 +79,6 @@ api
 docker compose run --rm api composer create-project laravel/laravel api
 ```
 
-コンテナ削除
-
-```bash
-docker compose down
-```
-
 ### ファイル作成, 削除
 
 ```bash
