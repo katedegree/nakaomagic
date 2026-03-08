@@ -291,11 +291,6 @@ docker compose run --rm api sh -c "composer require laravel/octane && php artisa
 ### 環境構築（git cloneした人も含む）
 ※ `git clone` した人は `.env` ファイルをリポジトリ管理者から受け取り、内容を自身の `.env` にコピーしてください
 
-
-```bash
-docker compose build
-```
-
 ```bash
 docker compose up -d
 ```
