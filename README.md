@@ -42,7 +42,7 @@ services:
 Dockerfile.api
 
 ```docker
-FROM php:8.4
+FROM php:8.4-fpm
 WORKDIR /workdir
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 ENV COMPOSER_ALLOW_SUPERUSER=1
@@ -54,7 +54,7 @@ RUN apt-get install -y zip
 Dockerfile.app
 
 ```docker
-FROM node:24
+FROM node:24-slim
 WORKDIR /workdir
 
 ```
@@ -134,7 +134,7 @@ EXPOSE 8000
 front/Dockerfile
 
 ```bash
-FROM node:24
+FROM node:24-slim
 WORKDIR /front
 # パッケージのインストールとキャッシュ削除
 RUN apt-get update && \
